@@ -1,3 +1,4 @@
+import json
 import shutil
 import subprocess
 
@@ -6,6 +7,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import motor.motor_asyncio
+from kafka import KafkaProducer
 
 from models import FlightReport
 
@@ -13,6 +15,8 @@ app = FastAPI()
 
 client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://user:pass@localhost:27017')
 db = client['flight-reports']
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 origins = [
     "http://127.0.0.1:4200",
@@ -37,14 +41,7 @@ async def upload_file(images: list[UploadFile] = File(...)):
     new_flight = await db["flight-reports"].insert_one(flight)
 
     created_flight = await db["flight-reports"].find_one({"_id": new_flight.inserted_id})
-    subprocess.Popen([
-        'python3',
-        '/Users/ivancernakov/Documents/metashape-orthomosaic-maker/main.py',
-        '--flight_id',
-        str(new_flight.inserted_id),
-        '--image_dir',
-        '/Users/ivancernakov/Documents/metashape-orthomosaic-maker/images'
-    ])
+    producer.send('orthomosaic', {'id': str(new_flight.inserted_id)})
 
     return created_flight
 

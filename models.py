@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
@@ -21,6 +23,8 @@ class PyObjectId(ObjectId):
 class FlightReport(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     path_to_images: str = Field(...)
+    type: str = Field(...)
+    flight_date: datetime = None
 
     class Config:
         allow_population_by_field_name = True
@@ -28,6 +32,8 @@ class FlightReport(BaseModel):
         json_encoders = {ObjectId: str}
         schema_extra = {
             "example": {
-                "path_to_folder": "uploads",
+                'path_to_folder': 'uploads',
+                'type': 'TEST',
+                'flight_date': None
             }
         }

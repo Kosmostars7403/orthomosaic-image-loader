@@ -5,3 +5,4 @@ motor~=3.1.1
 pydantic~=1.10.5
 pymongo~=4.3.3
 kafka-python==2.0.2
+exif~=1.6.0
